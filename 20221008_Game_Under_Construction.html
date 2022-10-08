@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Game Under Construction</title>
+    <style></style>
+  </head>
+  <body>
+    <table id="bigtable"></table>
+    <script type="text/javascript">
+      var bigtable = document.getElementById("bigtable");
+      bigtable.innerHTML = createEmptyTable(7, 5);
+
+      document.onkeydown = checkKey;
+      function checkKey(e) {
+        e = e || window.event;
+
+        if (e.keyCode == "38") {
+          alert("upar");
+        } else if (e.keyCode == "40") {
+          alert("dnar");
+        } else if (e.keyCode == "37") {
+          alert("lfar");
+        } else if (e.keyCode == "39") {
+          alert("rtar");
+        }
+      }
+
+      function createEmptyTable(cols, rows) {
+        var result = "";
+        for (y = 0; y < rows; y++) {
+          result += "<tr>";
+          for (x = 0; x < cols; x++) {
+            result += `<td><div id="x_${x}_y_${y}">HI</div></td>`;
+          }
+          result += "</tr>";
+        }
+        return result;
+      }
+    </script>
+  </body>
+</html>
