@@ -5,20 +5,43 @@
     <title>Game Under Construction</title>
     <style>
       body {
-        background-color: #333333;
+        background-color: #282828;
         color: #ffffff;
-        font-size: 2em;
+        font-size: 1.5em;
       }
 
-      .generalTile {
+      .tile {
         display: inline-block;
-        width: 2em;
-        max-width: 2em;
-        height: 2em;
-        max-height: 2em;
+        width: 1.5em;
+        max-width: 1.5em;
+        height: 1.5em;
+        max-height: 1.5em;
         text-align: center;
       }
-    </style>
+
+      .o_1, .o_2, .o_3 {
+        background-color: black;
+      }
+
+      .g_1, .g_2, .g_3 {
+        background-color: darkgreen;
+      }
+
+      .h_1, .h_2, .h_3 {
+        background-color: cyan;
+        color: black;
+      }
+
+      .m_1, .m_2, .m_3 {
+        background-color: red;
+      }
+
+      .win {
+        background-color: gold;
+        color: navy;
+      }
+
+</style>
   </head>
   <body>
     <table id="bigtable"></table>
@@ -32,46 +55,52 @@
 
       // Basic Hero Walking method
       function heroWalks(xChange, yChange) {
-        let x = document.heroPosition[0];
-        let y = document.heroPosition[1];
-        let oldTileId = xyId(x, y);
-        console.log("oldTileId:" + oldTileId);
+        let oldx = document.heroPosition[0];
+        let oldy = document.heroPosition[1];
+        let x = oldx + xChange;
+        let y = oldy + yChange;
 
-        x = x + xChange;
-        y = y + yChange;
         if (x < 0 || y < 0 || y >= fieldHeight || x >= fieldWidth) {
           console.log("Out of game field.");
           return;
         }
+        
         let newTileId = xyId(x, y);
-
-        // Check if the new tile actually has ... inside
-        newTileContent = document
-          .getElementById(newTileId)
-          .innerHTML.split("_");
+        newTileContent = getTileAt(x, y);
         typeOfTile = newTileContent[0];
+
         if (typeOfTile == "s") {
+          // Stairs, level up
           console.log("Walking down the stairs.");
           level++;
+
+          //Win scenario
+          if(level == 4){
+            level = "win";
+          }
           enterLevel(level, fieldWidth, fieldHeight);
           return;
+
         } else if (typeOfTile == "o") {
-          console.log("Can't walk obstacles.");
+          // Obstacle/wall
+          console.log("Can't step on obstacles.");
           return;
+          
         } else if (typeOfTile == "g") {
-          // Ground. You can walk ground.
-          document.getElementById(oldTileId).innerHTML =
-            newTileContent.join("_");
-          document.getElementById(newTileId).innerHTML = "_H_";
+          // Ground. You can step on the ground.
+          drawTileAt(newTileContent.join("_"), oldx, oldy);
+          drawTileAt("h_1", x, y);
+
         } else if (typeOfTile == "m") {
           // Monster. Now a monster can not be killed.
           // The level is now hardcoded to be 1.
           console.log("Stepped on a monster");
-          document.getElementById(oldTileId).innerHTML = "g_1";
+          drawTileAt(`g_${level}`, oldx, oldy)
           document.heroPosition = [-2, -2];
           return;
+
         } else {
-          console.log("Stepped on an unknown tile.");
+          console.log("Stepped on an unknown tile type.");
         }
         document.heroPosition = [x, y];
       }
@@ -94,14 +123,15 @@
 
       // Draw an empty table with divs whose ids are like x_2_y_5
       function drawEmptyTable(level, cols, rows) {
+        var tileContent = "g_" + level;
+        if(level == "win") {
+          tileContent = "win";
+        }
         var result = "";
         for (let y = 0; y < rows; y++) {
           result += "<tr>";
           for (let x = 0; x < cols; x++) {
-            result += `<td><div class="generalTile" id="${xyId(
-              x,
-              y
-            )}">g_${level}</div></td>`;
+            result += `<td><div class="tile, ${tileContent}" id="${xyId(x, y)}">${tileContent}</div></td>`;
           }
           result += "</tr>";
         }
@@ -109,7 +139,12 @@
       }
 
       function drawTileAt(tileContent, x, y) {
-        document.getElementById(xyId(x, y)).innerHTML = tileContent;
+        elem = document.getElementById(xyId(x, y));
+        elem.innerHTML = elem.className = tileContent;
+      }
+
+      function getTileAt(x, y){
+        return document.getElementById(xyId(x, y)).innerHTML.split("_");
       }
 
       function xyId(x, y) {
@@ -118,12 +153,21 @@
       }
 
       function enterLevel(level, fieldWidth, fieldHeight) {
+
         // Now it is at its most basic level.
         bigtable.innerHTML = drawEmptyTable(level, fieldWidth, fieldHeight);
-        // The hero position is a global thing.
+        
+        // Win scenario
+        if(level == "win"){
+          return;
+        }
+
+        // The hero position is global
         document.heroPosition = [1, 0];
+
         // The first step does not have a real old position, so:
         heroWalks(-1, 0);
+
         // Draw a level 1 obstacle. It is not walkable.
         drawTileAt(`o_${level}`, 3, 3);
 
@@ -132,6 +176,7 @@
 
         // Draw stairs.
         drawTileAt(`s_${level}`, 5, 5);
+
       }
     </script>
   </body>
