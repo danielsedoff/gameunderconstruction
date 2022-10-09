@@ -52,8 +52,8 @@
         typeOfTile = newTileContent[0];
         if (typeOfTile == "s") {
           console.log("Walking down the stairs.");
-          enterLevel(level, fieldWidth, fieldHeight);
           level++;
+          enterLevel(level, fieldWidth, fieldHeight);
           return;
         } else if (typeOfTile == "o") {
           console.log("Can't walk obstacles.");
