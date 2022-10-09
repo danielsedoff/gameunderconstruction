@@ -3,40 +3,86 @@
   <head>
     <meta charset="utf-8" />
     <title>Game Under Construction</title>
-    <style></style>
+    <style>
+      body{
+        background-color: #333333;
+        color: #ffffff;
+        font-size: 2em;
+      }
+    </style>
   </head>
   <body>
     <table id="bigtable"></table>
     <script type="text/javascript">
       var bigtable = document.getElementById("bigtable");
-      bigtable.innerHTML = createEmptyTable(7, 5);
+      var fieldWidth = 7;
+      var fieldHeight = 5;
 
+      bigtable.innerHTML = drawEmptyTable(fieldWidth, fieldHeight);
+      
+      // The hero position is a global thing.
+      document.heroPosition = [1, 0];
+      // The first step does not have a real old position, so:
+      heroWalks(-1, 0);
+
+
+      // Basic Hero Walking method
+      function heroWalks(xChange, yChange){
+        let x = document.heroPosition[0];
+        let y = document.heroPosition[1];
+        let oldTileId = `x_${x}_y_${y}`;
+        console.log("oldTileId:" + oldTileId);
+
+        x = x + xChange;
+        y = y + yChange;
+        if(x < 0 || y < 0 || y >= fieldHeight || x >= fieldWidth){
+          console.log("Out of game field.");
+          return;
+        }
+        let newTileId = `x_${x}_y_${y}`;
+        
+        // Check if the new tile actually has ... inside
+        newTileContent = document.getElementById(newTileId).innerHTML;
+        if(newTileContent != "..."){
+          console.log("Can't go to a non-empty tile.")
+        } else {
+          // Actually walk
+          document.getElementById(oldTileId).innerHTML = "...";
+          document.getElementById(newTileId).innerHTML = "H";
+        }
+        document.heroPosition = [x, y];
+      }
+
+      // Enable Arrow Keys. Global event.
       document.onkeydown = checkKey;
       function checkKey(e) {
         e = e || window.event;
 
         if (e.keyCode == "38") {
-          alert("upar");
+          heroWalks(0, -1); // up arrow
         } else if (e.keyCode == "40") {
-          alert("dnar");
+          heroWalks(0, 1); // down arrow
         } else if (e.keyCode == "37") {
-          alert("lfar");
+          heroWalks(-1, 0); // left arrow
         } else if (e.keyCode == "39") {
-          alert("rtar");
+          heroWalks(1, 0); // right arrow
         }
       }
 
-      function createEmptyTable(cols, rows) {
+      // Draw an empty table with divs whose ids are like x_2_y_5
+      function drawEmptyTable(cols, rows) {
         var result = "";
         for (y = 0; y < rows; y++) {
           result += "<tr>";
           for (x = 0; x < cols; x++) {
-            result += `<td><div id="x_${x}_y_${y}">HI</div></td>`;
+            result += `<td><div id="x_${x}_y_${y}">...</div></td>`;
           }
           result += "</tr>";
         }
         return result;
       }
+
+
     </script>
   </body>
 </html>
