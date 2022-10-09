@@ -9,6 +9,15 @@
         color: #ffffff;
         font-size: 2em;
       }
+
+      .generalTile {
+        display: inline-block;
+        width: 2em;
+        max-width: 2em;
+        height: 2em;
+        max-height: 2em;
+        text-align: center;
+      }
     </style>
   </head>
   <body>
@@ -16,26 +25,16 @@
     <script type="text/javascript">
       var bigtable = document.getElementById("bigtable");
       var fieldWidth = 9;
-      var fieldHeight = 7;
+      var fieldHeight = 6;
+      var level = 1;
 
-      bigtable.innerHTML = drawEmptyTable(fieldWidth, fieldHeight);
-
-      // The hero position is a global thing.
-      document.heroPosition = [1, 0];
-      // The first step does not have a real old position, so:
-      heroWalks(-1, 0);
-
-      // Draw a level 1 stone. It is not walkable.
-      drawTileAt("s_1", 3, 3);
-
-      // Draw a level 1 monster. It can not be killed.
-      drawTileAt("m_1", 4, 4)
+      enterLevel(level, fieldWidth, fieldHeight);
 
       // Basic Hero Walking method
       function heroWalks(xChange, yChange) {
         let x = document.heroPosition[0];
         let y = document.heroPosition[1];
-        let oldTileId = `x_${x}_y_${y}`;
+        let oldTileId = xyId(x, y);
         console.log("oldTileId:" + oldTileId);
 
         x = x + xChange;
@@ -44,21 +43,27 @@
           console.log("Out of game field.");
           return;
         }
-        let newTileId = `x_${x}_y_${y}`;
+        let newTileId = xyId(x, y);
 
         // Check if the new tile actually has ... inside
         newTileContent = document
           .getElementById(newTileId)
           .innerHTML.split("_");
-        if (newTileContent[0] == "s") {
-          console.log("Can't go to a non-empty tile.");
+        typeOfTile = newTileContent[0];
+        if (typeOfTile == "s") {
+          console.log("Walking down the stairs.");
+          enterLevel(level, fieldWidth, fieldHeight);
+          level++;
           return;
-        } else if (newTileContent[0] == "g") {
+        } else if (typeOfTile == "o") {
+          console.log("Can't walk obstacles.");
+          return;
+        } else if (typeOfTile == "g") {
           // Ground. You can walk ground.
           document.getElementById(oldTileId).innerHTML =
             newTileContent.join("_");
           document.getElementById(newTileId).innerHTML = "_H_";
-        } else if (newTileContent[0] == "m") {
+        } else if (typeOfTile == "m") {
           // Monster. Now a monster can not be killed.
           // The level is now hardcoded to be 1.
           console.log("Stepped on a monster");
@@ -88,12 +93,15 @@
       }
 
       // Draw an empty table with divs whose ids are like x_2_y_5
-      function drawEmptyTable(cols, rows) {
+      function drawEmptyTable(level, cols, rows) {
         var result = "";
-        for (y = 0; y < rows; y++) {
+        for (let y = 0; y < rows; y++) {
           result += "<tr>";
-          for (x = 0; x < cols; x++) {
-            result += `<td><div id="x_${x}_y_${y}">g_1</div></td>`;
+          for (let x = 0; x < cols; x++) {
+            result += `<td><div class="generalTile" id="${xyId(
+              x,
+              y
+            )}">g_${level}</div></td>`;
           }
           result += "</tr>";
         }
@@ -101,8 +109,29 @@
       }
 
       function drawTileAt(tileContent, x, y) {
-        id = `x_${x}_y_${y}`;
-        document.getElementById(id).innerHTML = tileContent;
+        document.getElementById(xyId(x, y)).innerHTML = tileContent;
+      }
+
+      function xyId(x, y) {
+        // Compile tile ID with given X and Y coordinates.
+        return `x_${x}_y_${y}`;
+      }
+
+      function enterLevel(level, fieldWidth, fieldHeight) {
+        // Now it is at its most basic level.
+        bigtable.innerHTML = drawEmptyTable(level, fieldWidth, fieldHeight);
+        // The hero position is a global thing.
+        document.heroPosition = [1, 0];
+        // The first step does not have a real old position, so:
+        heroWalks(-1, 0);
+        // Draw a level 1 obstacle. It is not walkable.
+        drawTileAt(`o_${level}`, 3, 3);
+
+        // Draw a level 1 monster. It can not be killed.
+        drawTileAt(`m_${level}`, 4, 4);
+
+        // Draw stairs.
+        drawTileAt(`s_${level}`, 5, 5);
       }
     </script>
   </body>
