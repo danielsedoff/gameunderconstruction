@@ -8,6 +8,7 @@
         background-color: #282828;
         color: #ffffff;
         font-size: 1.5em;
+        font-family: monospace;
       }
 
       .tile {
@@ -108,16 +109,14 @@
       // Enable Arrow Keys. Global event.
       document.onkeydown = checkKey;
       function checkKey(e) {
+        action = [];
+        action[38] = () => {heroWalks(0, -1)}; /*UP*/
+        action[40] = () => {heroWalks(0, 1)};  /*DN*/
+        action[37] = () => {heroWalks(-1, 0)}; /*LT*/
+        action[39] = () => {heroWalks(1, 0)};  /*RT*/
         e = e || window.event;
-
-        if (e.keyCode == "38") {
-          heroWalks(0, -1); // up arrow
-        } else if (e.keyCode == "40") {
-          heroWalks(0, 1); // down arrow
-        } else if (e.keyCode == "37") {
-          heroWalks(-1, 0); // left arrow
-        } else if (e.keyCode == "39") {
-          heroWalks(1, 0); // right arrow
+        if (action[e.keyCode] != undefined) {
+          action[e.keyCode]();
         }
       }
 
@@ -171,13 +170,40 @@
         // Draw a level 1 obstacle. It is not walkable.
         drawTileAt(`o_${level}`, 3, 3);
 
-        // Draw a level 1 monster. It can not be killed.
-        drawTileAt(`m_${level}`, 4, 4);
+        // Put a monster at a random place. It kills the hero.
+        let xy = randomGroundTile(fieldWidth, fieldHeight);
+        drawTileAt(`m_${level}`, xy[0], xy[1]);
 
         // Draw stairs.
         drawTileAt(`s_${level}`, 5, 5);
 
       }
+
+      // Get a random tile which has Ground as its content.
+      function randomGroundTile(fieldWidth, fieldHeight){
+        fullCount = fieldWidth * fieldHeight;
+        let x = 0; 
+        let y = 0;
+        for(i = 0; i < fullCount; i++){
+          randomTile = getRandomInt(1, fullCount);
+          y = Math.floor(randomTile / fieldWidth);
+          x = randomTile % fieldWidth;
+          tileContent = getTileAt(x, y);
+          typeOfTile = tileContent[0];
+          if(typeOfTile == "g"){
+            break;
+          }
+        }
+        return [x, y];
+      }
+
+      // Get a random integer within given limits.
+      function getRandomInt(min, max){
+        min = Math.ceil(min);
+        max = Math.ceil(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
     </script>
   </body>
 </html>
