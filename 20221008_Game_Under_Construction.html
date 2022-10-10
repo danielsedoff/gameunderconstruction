@@ -26,10 +26,21 @@
 
       .g_1, .g_2, .g_3 {
         background-color: darkgreen;
+        color: whitesmoke;
+      }
+
+      .g_4, .g_5, .g_6 {
+        background-color: aqua;
+        color: magenta;
+      }
+
+      .g_7, .g_8, .g_9 {
+        background-color: darkolivegreen;
+        color: rebeccapurple;
       }
 
       .h_1, .h_2, .h_3 {
-        background-color: cyan;
+        background-color: pink;
         color: black;
       }
 
@@ -45,24 +56,51 @@
 </style>
   </head>
   <body>
+    <p id="herohealth"></p>
     <table id="bigtable"></table>
     <script type="text/javascript">
       var bigtable = document.getElementById("bigtable");
       var fieldWidth = 9;
-      var fieldHeight = 6;
+      var fieldHeight = 18;
       var level = 1;
+      var maxLevel = 10;
+      var heroHealth = 100;
+      var heroPosition = [0, 0];
 
       enterLevel(level, fieldWidth, fieldHeight);
 
+      // Basic Health stat.
+      function displayHealth(){
+        document.getElementById("herohealth").innerHTML = `health: ${heroHealth}%`;
+      }
+
+      // Draw walls.
+      function drawRandomWall(length){
+        [x, y] = randomGroundTile(fieldWidth, fieldHeight);
+        dx = getRandomInt(-1, 1);
+        dy = getRandomInt(-1, 1);
+        if (dx == 0 && dy == 0) dy = 1;
+        while(true){
+          x += dx; y += dy;
+          if(getTileAt(x, y) == undefined){
+            break;
+          }
+          drawTileAt(`o_${level}`, x, y); 
+        }
+      }
+
       // Basic Hero Walking method
       function heroWalks(xChange, yChange) {
-        let oldx = document.heroPosition[0];
-        let oldy = document.heroPosition[1];
+        displayHealth();
+        let oldx = heroPosition[0];
+        let oldy = heroPosition[1];
         let x = oldx + xChange;
         let y = oldy + yChange;
 
         if (x < 0 || y < 0 || y >= fieldHeight || x >= fieldWidth) {
           console.log("Out of game field.");
+          // For debug purposes, uncomment the following line.
+          // throw new Error();
           return;
         }
         
@@ -76,7 +114,7 @@
           level++;
 
           //Win scenario
-          if(level == 4){
+          if(level >= maxLevel){
             level = "win";
           }
           enterLevel(level, fieldWidth, fieldHeight);
@@ -94,16 +132,18 @@
 
         } else if (typeOfTile == "m") {
           // Monster. Now a monster can not be killed.
-          // The level is now hardcoded to be 1.
           console.log("Stepped on a monster");
           drawTileAt(`g_${level}`, oldx, oldy)
-          document.heroPosition = [-2, -2];
+          heroPosition = [-2, -2];
+          
+          heroHealth -= 100;
+          displayHealth();
           return;
 
         } else {
           console.log("Stepped on an unknown tile type.");
         }
-        document.heroPosition = [x, y];
+        heroPosition = [x, y];
       }
 
       // Enable Arrow Keys. Global event.
@@ -143,7 +183,9 @@
       }
 
       function getTileAt(x, y){
-        return document.getElementById(xyId(x, y)).innerHTML.split("_");
+        result = document.getElementById(xyId(x, y));
+        if (result == undefined) return undefined;
+        return result.innerHTML.split("_");
       }
 
       function xyId(x, y) {
@@ -162,32 +204,29 @@
         }
 
         // The hero position is global
-        document.heroPosition = [1, 0];
+        heroPosition = randomGroundTile(fieldWidth, fieldHeight);
 
         // The first step does not have a real old position, so:
-        heroWalks(-1, 0);
+        heroWalks(0, 0);
 
-        // Draw a level 1 obstacle. It is not walkable.
-        drawTileAt(`o_${level}`, 3, 3);
+        // Draw a wall. It is not walkable.
+        drawRandomWall(level * 4);
 
         // Put a monster at a random place. It kills the hero.
         let xy = randomGroundTile(fieldWidth, fieldHeight);
         drawTileAt(`m_${level}`, xy[0], xy[1]);
 
         // Draw stairs.
-        drawTileAt(`s_${level}`, 5, 5);
+        xy = randomGroundTile(fieldWidth, fieldHeight);
+        drawTileAt(`s_${level}`, xy[0], xy[1]);
 
       }
 
       // Get a random tile which has Ground as its content.
       function randomGroundTile(fieldWidth, fieldHeight){
-        fullCount = fieldWidth * fieldHeight;
-        let x = 0; 
-        let y = 0;
-        for(i = 0; i < fullCount; i++){
-          randomTile = getRandomInt(1, fullCount);
-          y = Math.floor(randomTile / fieldWidth);
-          x = randomTile % fieldWidth;
+        for(i = 0; i < fieldWidth * fieldHeight; i++){
+          x = getRandomInt(0, fieldWidth - 1);
+          y = getRandomInt(0, fieldHeight - 1);
           tileContent = getTileAt(x, y);
           typeOfTile = tileContent[0];
           if(typeOfTile == "g"){
