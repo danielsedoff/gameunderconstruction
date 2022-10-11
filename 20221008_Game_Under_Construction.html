@@ -7,16 +7,13 @@
       body {
         background-color: #282828;
         color: #ffffff;
-        font-size: 1.5em;
+        font-size: 4em;
         font-family: monospace;
       }
 
       .tile {
         display: inline-block;
-        width: 1.5em;
         max-width: 1.5em;
-        height: 1.5em;
-        max-height: 1.5em;
         text-align: center;
       }
 
@@ -53,11 +50,16 @@
         color: navy;
       }
 
+      body {
+        overscroll-behavior: contain;
+        height: 100%;
+      }
+
 </style>
   </head>
   <body>
     <p id="herohealth"></p>
-    <table id="bigtable"></table>
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" id="bigtable">
     <script type="text/javascript">
       var bigtable = document.getElementById("bigtable");
       var fieldWidth = 9;
@@ -242,6 +244,38 @@
         max = Math.ceil(max);
         return Math.floor(Math.random() * (max - min + 1)) + min;
       }
+
+
+      let touchstartX = 0;
+      let touchstartY = 0;
+      let touchendX = 0;
+      let touchendY = 0;
+        
+      function checkDirection() {
+        
+        dx = Math.abs(touchendX - touchstartX);
+        dy = Math.abs(touchendY - touchstartY);
+
+        // Distance too low
+        if (Math.max(dx, dy) < 64) return;
+
+        if (dx >= dy && touchendX < touchstartX) {heroWalks(-1, 0)}; /*LT*/
+        if (dx < dy && touchendY < touchstartY) {heroWalks(0, -1)}; /*UP*/
+        if (dx >= dy  && touchendX > touchstartX) {heroWalks(1, 0)};  /*RT*/
+        if (dx < dy  && touchendY > touchstartY) {heroWalks(0, 1)};  /*DN*/
+
+      }
+
+      document.addEventListener('touchstart', e => {
+        touchstartX = e.changedTouches[0].screenX;
+        touchstartY = e.changedTouches[0].screenY;
+      })
+
+      document.addEventListener('touchend', e => {
+        touchendX = e.changedTouches[0].screenX;
+        touchendY = e.changedTouches[0].screenY;
+        checkDirection();
+      })
 
     </script>
   </body>
