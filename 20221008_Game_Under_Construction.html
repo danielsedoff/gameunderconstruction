@@ -76,8 +76,8 @@
         document.getElementById("herohealth").innerHTML = `health: ${heroHealth}%`;
       }
 
-      // Draw walls.
-      function drawRandomWall(length){
+      // Draw obstacles.
+      function drawRandomObstacle(length){
         [x, y] = randomGroundTile(fieldWidth, fieldHeight);
         dx = getRandomInt(-1, 1);
         dy = getRandomInt(-1, 1);
@@ -99,10 +99,8 @@
         let x = oldx + xChange;
         let y = oldy + yChange;
 
+        // OUt of game field
         if (x < 0 || y < 0 || y >= fieldHeight || x >= fieldWidth) {
-          console.log("Out of game field.");
-          // For debug purposes, uncomment the following line.
-          // throw new Error();
           return;
         }
         
@@ -123,7 +121,7 @@
           return;
 
         } else if (typeOfTile == "o") {
-          // Obstacle/wall
+          // Obstacle
           console.log("Can't step on obstacles.");
           return;
           
@@ -135,7 +133,8 @@
         } else if (typeOfTile == "m") {
           // Monster. Now a monster can not be killed.
           console.log("Stepped on a monster");
-          drawTileAt(`g_${level}`, oldx, oldy)
+          [gtx, gty] = randomGroundTile(fieldWidth, fieldHeight);
+          drawTileAt(getTileAt(gtx, gty).join("_"), oldx, oldy)
           heroPosition = [-2, -2];
           
           heroHealth -= 100;
@@ -179,25 +178,28 @@
         return result;
       }
 
+      // Draw a tile with given content at x, y
       function drawTileAt(tileContent, x, y) {
         elem = document.getElementById(xyId(x, y));
         elem.innerHTML = elem.className = tileContent;
       }
 
+      // Get tile content at x, y or [x, y] at once
       function getTileAt(x, y){
         result = document.getElementById(xyId(x, y));
         if (result == undefined) return undefined;
         return result.innerHTML.split("_");
       }
 
-      function xyId(x, y) {
-        // Compile tile ID with given X and Y coordinates.
+      // get tile element ID for given x, y
+        function xyId(x, y) {
         return `x_${x}_y_${y}`;
       }
 
-      function enterLevel(level, fieldWidth, fieldHeight) {
 
-        // Now it is at its most basic level.
+      // Enter a new level
+      // TODO: Avoid levels where Stairs is unreachable.
+      function enterLevel(level, fieldWidth, fieldHeight) {
         bigtable.innerHTML = drawEmptyTable(level, fieldWidth, fieldHeight);
         
         // Win scenario
@@ -205,19 +207,21 @@
           return;
         }
 
-        // The hero position is global
+        // Hero position is global: visible outside function
         heroPosition = randomGroundTile(fieldWidth, fieldHeight);
-
-        // The first step does not have a real old position, so:
         heroWalks(0, 0);
 
-        // Draw a wall. It is not walkable.
-        drawRandomWall(level * 4);
+        // Draw obstacles
+        for (let i = 0; i < level / 2; i++){
+          drawRandomObstacle(level * 2);
+        }
 
-        // Put a monster at a random place. It kills the hero.
-        let xy = randomGroundTile(fieldWidth, fieldHeight);
-        drawTileAt(`m_${level}`, xy[0], xy[1]);
-
+        // Put monsters at random places.
+        // TODO: The hero must be able to kill monsters.
+        for(let i = 0; i < level; i++){
+          let xy = randomGroundTile(fieldWidth, fieldHeight);
+          drawTileAt(`m_${level}`, xy[0], xy[1]);
+        }
         // Draw stairs.
         xy = randomGroundTile(fieldWidth, fieldHeight);
         drawTileAt(`s_${level}`, xy[0], xy[1]);
@@ -276,6 +280,11 @@
         touchendY = e.changedTouches[0].screenY;
         checkDirection();
       })
+
+      // TODO: Make this function real.
+      function isStairsAccessible(){
+        return true;
+      }
 
     </script>
   </body>
