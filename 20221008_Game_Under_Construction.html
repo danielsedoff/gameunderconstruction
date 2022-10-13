@@ -198,7 +198,6 @@
 
 
       // Enter a new level
-      // TODO: Avoid levels where Stairs is unreachable.
       function enterLevel(level, fieldWidth, fieldHeight) {
         bigtable.innerHTML = drawEmptyTable(level, fieldWidth, fieldHeight);
         
@@ -208,6 +207,7 @@
         }
 
         // Hero position is global: visible outside function
+        // TODO: Fix the bug where the Hero is INVISIBLE for the User
         heroPosition = randomGroundTile(fieldWidth, fieldHeight);
         heroWalks(0, 0);
 
@@ -226,6 +226,15 @@
         xy = randomGroundTile(fieldWidth, fieldHeight);
         drawTileAt(`s_${level}`, xy[0], xy[1]);
 
+        // Check if the Stairs is Accessible.
+        counter = 100;
+        while(!isStairsAccessible() && counter > 0){
+          counter--;
+          enterLevel(level, fieldWidth, fieldHeight);
+        }
+        if (!isStairsAccessible()){
+          document.body.innerHTML = "The Game has become too tough :(";
+        }
       }
 
       // Get a random tile which has Ground as its content.
@@ -281,9 +290,35 @@
         checkDirection();
       })
 
-      // TODO: Make this function real.
+      // Check whether the User will be able to get to the Stairs.
       function isStairsAccessible(){
-        return true;
+        checkedCells = [];
+        checkedCells.push(heroPosition);
+        checkCell(heroPosition, checkedCells);
+        return checkedCells.indexOf("success") > -1;
+      }
+
+      function checkCell(coord, checkedCells){
+        checkedCells.push(coord.join(","));
+        console.debug("checking cell " + coord);
+        [x, y] = coord;
+        [left,  right] = [ [x - 1, y], [x + 1, y] ];
+        [upper, lower] = [ [x, y - 1], [x, y + 1] ];
+        for(direction of [left, right, upper, lower]){
+          if(checkedCells.indexOf(direction.join(",")) > -1) continue;
+          tile = getTileAt(direction[0], direction[1]);
+          console.debug(tile);
+          if(tile == undefined) {
+            continue;
+          } 
+          tileType = tile[0];
+          if (tileType == "s"){
+            checkedCells.push("success");
+            return;
+          } else if (tileType == "g"){
+            checkCell(direction, checkedCells);
+          }
+        }
       }
 
     </script>
