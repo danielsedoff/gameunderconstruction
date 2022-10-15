@@ -11,45 +11,6 @@
         font-family: monospace;
       }
 
-      .tile {
-        display: inline-block;
-        max-width: 1.5em;
-        text-align: center;
-      }
-
-      .o_1, .o_2, .o_3 {
-        background-color: black;
-      }
-
-      .g_1, .g_2, .g_3 {
-        background-color: darkgreen;
-        color: whitesmoke;
-      }
-
-      .g_4, .g_5, .g_6 {
-        background-color: aqua;
-        color: magenta;
-      }
-
-      .g_7, .g_8, .g_9 {
-        background-color: darkolivegreen;
-        color: rebeccapurple;
-      }
-
-      .h_1, .h_2, .h_3 {
-        background-color: pink;
-        color: black;
-      }
-
-      .m_1, .m_2, .m_3 {
-        background-color: red;
-      }
-
-      .win {
-        background-color: gold;
-        color: navy;
-      }
-
       body {
         overscroll-behavior: contain;
         height: 100%;
@@ -99,7 +60,7 @@
         let x = oldx + xChange;
         let y = oldy + yChange;
 
-        // OUt of game field
+        // Out of game field
         if (x < 0 || y < 0 || y >= fieldHeight || x >= fieldWidth) {
           return;
         }
@@ -107,6 +68,12 @@
         let newTileId = xyId(x, y);
         newTileContent = getTileAt(x, y);
         typeOfTile = newTileContent[0];
+
+        document.getElementById(newTileId).scrollIntoView({
+            behavior: 'auto',
+            block: 'center',
+            inline: 'center'
+        });
 
         if (typeOfTile == "s") {
           // Stairs, level up
@@ -171,7 +138,7 @@
         for (let y = 0; y < rows; y++) {
           result += "<tr>";
           for (let x = 0; x < cols; x++) {
-            result += `<td><div class="tile, ${tileContent}" id="${xyId(x, y)}">${tileContent}</div></td>`;
+            result += `<td><div class="${tileContent}" id="${xyId(x, y)}"><img src="${tileContent}.png"/></div></td>`;
           }
           result += "</tr>";
         }
@@ -181,14 +148,15 @@
       // Draw a tile with given content at x, y
       function drawTileAt(tileContent, x, y) {
         elem = document.getElementById(xyId(x, y));
-        elem.innerHTML = elem.className = tileContent;
+        elem.className = tileContent;
+        elem.innerHTML = `<img src="${tileContent}.png"/>`;
       }
 
       // Get tile content at x, y or [x, y] at once
       function getTileAt(x, y){
         result = document.getElementById(xyId(x, y));
         if (result == undefined) return undefined;
-        return result.innerHTML.split("_");
+        return result.className.split("_");
       }
 
       // get tile element ID for given x, y
