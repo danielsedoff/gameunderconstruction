@@ -9,18 +9,15 @@
         color: #ffffff;
         font-size: 4em;
         font-family: monospace;
-      }
-
-      body {
         overscroll-behavior: contain;
-        height: 100%;
+        height: 100%;      
       }
 
       .tile {
         display:inline-block;
       }
 
-      .bigtable {
+      .gameFieldDiv {
         display:block;
         white-space: nowrap;
       }
@@ -29,9 +26,9 @@
   </head>
   <body>
     <p id="herohealth"></p>
-    <div id="bigtable" class="bigtable">
+    <div id="gameFieldDiv" class="gameFieldDiv">
     <script type="text/javascript">
-      var bigtable = document.getElementById("bigtable");
+      var gameFieldDiv = document.getElementById("gameFieldDiv");
       var fieldWidth = 9;
       var fieldHeight = 15;
       var level = 1;
@@ -54,7 +51,7 @@
         if (dx == 0 && dy == 0) dy = 1;
         while(true){
           x += dx; y += dy;
-          if(getTileAt(x, y) == undefined){
+          if(getTileAt(x, y) == null){
             break;
           }
           drawTileAt(`o_${level}`, x, y); 
@@ -127,9 +124,10 @@
         action[37] = () => {heroWalks(-1, 0)}; /*LT*/
         action[39] = () => {heroWalks(1, 0)};  /*RT*/
         e = e || window.event;
-        if (action[e.keyCode] != undefined) {
+        if (action[e.keyCode]) {
           action[e.keyCode]();
         }
+        e.preventDefault();
       }
 
       // Draw an empty table with divs whose ids are like x_2_y_5
@@ -158,7 +156,7 @@
       // Get tile content at x, y or [x, y] at once
       function getTileAt(x, y){
         result = document.getElementById(xyId(x, y));
-        if (result == undefined) return undefined;
+        if (result == undefined) return null;
         fullClassName = result.className;
         classNamePart = fullClassName.replace(/tile /, "");
         return classNamePart.split("_");
@@ -172,7 +170,7 @@
 
       // Enter a new level
       function enterLevel(level, fieldWidth, fieldHeight) {
-        bigtable.innerHTML = drawEmptyTable(level, fieldWidth, fieldHeight);
+        gameFieldDiv.innerHTML = drawEmptyTable(level, fieldWidth, fieldHeight);
         
         // Win scenario
         if(level == "win"){
@@ -255,12 +253,14 @@
       document.addEventListener('touchstart', e => {
         touchstartX = e.changedTouches[0].screenX;
         touchstartY = e.changedTouches[0].screenY;
+        e.preventDefault();
       })
 
       document.addEventListener('touchend', e => {
         touchendX = e.changedTouches[0].screenX;
         touchendY = e.changedTouches[0].screenY;
         checkDirection();
+        e.preventDefault();
       })
 
       document.addEventListener("keydown", function(e) {
@@ -270,28 +270,7 @@
           }
       }, false);
 
-      document.addEventListener("touchstart", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }, false);
-
-      document.addEventListener("touchend", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }, false);
-
-      document.addEventListener("touchmove", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }, false);
-
-      document.addEventListener("mousedown", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }, false);
-
-
-      // Check whether the User will be able to get to the Stairs.
+      // Check whether the hero will be able to get to the Stairs.
       function isStairsAccessible(){
         checkedCells = [];
         checkedCells.push(heroPosition);
@@ -309,7 +288,7 @@
           if(checkedCells.indexOf(direction.join(",")) > -1) continue;
           tile = getTileAt(direction[0], direction[1]);
           console.debug(tile);
-          if(tile == undefined) {
+          if(tile == null) {
             continue;
           } 
           tileType = tile[0];
