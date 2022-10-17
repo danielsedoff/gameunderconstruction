@@ -5,6 +5,11 @@ var maxLevel = 10;
 var heroHealth = 100;
 var heroPosition = [0, 0];
 
+let touchstartX = 0;
+let touchstartY = 0;
+let touchendX = 0;
+let touchendY = 0;
+
 enterLevel(level, fieldWidth, fieldHeight);
 addListeners();
 
@@ -13,12 +18,7 @@ function addListeners(){
     // check keys when they are pressed
     document.onkeydown = checkKey;
 
-    // Touch user interface orientation
-    let touchstartX = 0;
-    let touchstartY = 0;
-    let touchendX = 0;
-    let touchendY = 0;
-
+   // Touch user interface orientation
     document.addEventListener('touchstart', e => {
         touchstartX = e.changedTouches[0].screenX;
         touchstartY = e.changedTouches[0].screenY;
