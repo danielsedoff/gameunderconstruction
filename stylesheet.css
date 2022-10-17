@@ -1,0 +1,17 @@
+body {
+    background-color: #282828;
+    color: #ffffff;
+    font-size: 4em;
+    font-family: monospace;
+    overscroll-behavior: contain;
+    height: 100%;      
+  }
+
+  .tile {
+    display:inline-block;
+  }
+
+  .gameFieldDiv {
+    display:block;
+    white-space: nowrap;
+  }
