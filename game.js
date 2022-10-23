@@ -1,3 +1,6 @@
+var debugEnabled = true;
+var maxIterations = 100;
+
 var fieldWidth = 9;
 var fieldHeight = 15;
 var level = 1;
@@ -5,48 +8,41 @@ var maxLevel = 10;
 var heroHealth = 100;
 var heroPosition = [0, 0];
 
-let touchstartX = 0;
-let touchstartY = 0;
-let touchendX = 0;
-let touchendY = 0;
+// Create a two-dimensional array: game field.
+var gameField = [];
+for(let y = 0; y < fieldHeight; y++) {
+  gameField[y] = [];
+  for (let x = 0; x < fieldWidth; x++) {
+    gameField[y][x] = "";
+  }
+}
 
+redraw();
 enterLevel(level, fieldWidth, fieldHeight);
+
+// Touch display specific, DOM specific
+var touchstartX = 0;
+var touchstartY = 0;
+var touchendX = 0;
+var touchendY = 0;
 addListeners();
 
-// Add events for keyboard and touch control 
-function addListeners(){
-    // check keys when they are pressed
-    document.onkeydown = checkKey;
-
-   // Touch user interface orientation
-    document.addEventListener('touchstart', e => {
-        touchstartX = e.changedTouches[0].screenX;
-        touchstartY = e.changedTouches[0].screenY;
-        e.preventDefault();
-    })
-
-    document.addEventListener('touchend', e => {
-        touchendX = e.changedTouches[0].screenX;
-        touchendY = e.changedTouches[0].screenY;
-        checkDirection();
-        e.preventDefault();
-    })
-}
 
 // Basic Health stat. (- writing html to document)
 function writeHealthToDocument(){
-  document.getElementById("herohealth").innerHTML = `health: ${heroHealth}%`;
+  writeToDocument(`health: ${heroHealth}%`);
 }
 
 // Draw obstacles (+)
 function drawRandomObstacle(length){
-  [x, y] = randomGroundTile();
-  dx = getRandomInt(-1, 1);
-  dy = getRandomInt(-1, 1);
+  let [x, y] = randomGroundTile();
+  let dx = getRandomInt(-1, 1);
+  let dy = getRandomInt(-1, 1);
   if (dx == 0 && dy == 0) dy = 1;
   while(getTileAt(x + dx, y + dy) != null){
     x += dx; y += dy;
-    drawTileAt(`o_${level}`, x, y); 
+    consoleDebug(`Drawing random obstacle, x: ${x} y: ${y}`);
+    changeTileAt(`o_${level}`, x, y); 
   }
 }
 
@@ -57,19 +53,14 @@ function heroWalks(dx, dy) {
   let oldy = heroPosition[1];
   let x = oldx + dx;
   let y = oldy + dy;
-
-  // Out of game field
-  if (x < 0 || y < 0 || y >= fieldHeight || x >= fieldWidth) {
-    return;
-  }
   
-  let newTileId = xyId(x, y);
   let newTileContent = getTileAt(x, y);
+  if(newTileContent == null) return;
   let typeOfTile = newTileContent[0];
-  scrollToElemId(newTileId);
+  scrollToElemId(`x_${x}_y_${y}`);
 
   if (typeOfTile == "s") {
-    console.log("Walking down the stairs.");
+    consoleDebug("Walking down the stairs.");
     level++;
     if(level >= maxLevel){
       level = "win";
@@ -78,69 +69,63 @@ function heroWalks(dx, dy) {
     return;
 
   } else if (typeOfTile == "o") {
-    console.log("Can't step on obstacles.");
+    consoleDebug("Can't step on obstacles.");
     return;
     
   } else if (typeOfTile == "g") {
     // Ground. You can step on the ground.
-    drawTileAt(newTileContent.join("_"), oldx, oldy);
-    drawTileAt("h_1", x, y);
+    changeTileAt(newTileContent.join("_"), oldx, oldy);
+    changeTileAt("h_1", x, y);
+    redraw();
 
   } else if (typeOfTile == "m") {
-    console.log("Stepped on a monster");
+    consoleDebug("Stepped on a monster");
     [gtx, gty] = randomGroundTile();
-    drawTileAt(getTileAt(gtx, gty).join("_"), oldx, oldy)
+    changeTileAt(getTileAt(gtx, gty).join("_"), oldx, oldy);
+    redraw();
     heroPosition = [-2, -2];
     heroHealth -= 100;
     writeHealthToDocument();
     return;
 
   } else {
-    console.log("Stepped on an unknown tile.");
+    consoleDebug("Stepped on an unknown tile.");
   }
   heroPosition = [x, y];
 }
 
-// Draw an empty table with divs whose ids are like x_2_y_5 (- writing html)
-function drawEmptyTable(level, cols, rows) {
-  var tileContent = "g_" + level;
+// Draw an empty field with ground or 'WIN' tiles (+)
+function getEmptyFIeld(level, cols, rows) {
+  let tileContent = "g_" + level;
   if(level == "win") {
     tileContent = "win";
   }
-  var result = "";
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
-      result += `<div class="tile ${tileContent}" id="${xyId(x, y)}"><img src="${tileContent}.png"/></div>`;
+      gameField[y][x] = tileContent;
+      consoleDebug("Drawing an empty table: x, y" + [x, y]);
     }
-    result += "<br/>";
   }
-  return result;
 }
 
-// Draw a tile with given content at x, y (- writing html)
-function drawTileAt(tileContent, x, y) {
-  elem = document.getElementById(xyId(x, y));
-  elem.className = "tile " + tileContent;
-  elem.innerHTML = `<img src="${tileContent}.png"/>`;
+// Draw a tile with given content at x, y (+)
+function changeTileAt(tileContent, x, y) {
+  gameField[y][x] = tileContent;
 }
 
-// Get tile content at x, y or [x, y] at once(- reading html)
+// Get tile content at x, y or [x, y] at once(+)
 function getTileAt(x, y){
-  result = document.getElementById(xyId(x, y));
-  if (result == undefined) return null;
-  fullClassName = result.className;
-  classNamePart = fullClassName.replace(/tile /, "");
-  return classNamePart.split("_");
-}
-
-// get tile element ID for given x, y (+)
-  function xyId(x, y) {
-  return `x_${x}_y_${y}`;
+  try {
+    let tileContent = gameField[y][x];
+    return (tileContent).split("_");
+  } catch (e) {
+    return null;
+  }
 }
 
 // Enable Arrow Keys navigation (- uses window)
 function checkKey(e) {
-    action = [];
+    let action = [];
     action[38] = () => {heroWalks(0, -1)}; /*UP*/
     action[40] = () => {heroWalks(0, 1)};  /*DN*/
     action[37] = () => {heroWalks(-1, 0)}; /*LT*/
@@ -154,51 +139,60 @@ function checkKey(e) {
   
 // Enter a new level (- read html, use global heroPosition)
 function enterLevel(level, fieldWidth, fieldHeight) {
-  document.getElementById("gameFieldDiv").innerHTML = drawEmptyTable(level, fieldWidth, fieldHeight);
-  
+  getEmptyFIeld(level, fieldWidth, fieldHeight);
+
   // Win scenario
   if(level == "win"){
+    redraw();
     return;
   }
 
-  // Hero position is global: visible outside function
-  // TODO: Fix the bug where the Hero is INVISIBLE for the User
-  heroPosition = randomGroundTile();
-  heroWalks(0, 0);
-
   // Draw obstacles
-  for (let i = 0; i < level / 2; i++){
+  for (let i = 0; i < level; i++){
     drawRandomObstacle(level * 2);
+    consoleDebug("Another random obstacle set...");
   }
 
   // Put monsters at random places.
   // TODO: The hero must be able to kill monsters.
   for(let i = 0; i < level; i++){
     let xy = randomGroundTile();
-    drawTileAt(`m_${level}`, xy[0], xy[1]);
+    changeTileAt(`m_${level}`, xy[0], xy[1]);
+    consoleDebug("Putting a monster at x, y: " + xy);
   }
+
   // Draw stairs.
-  xy = randomGroundTile();
-  drawTileAt(`s_${level}`, xy[0], xy[1]);
+  let xy = randomGroundTile();
+  changeTileAt(`s_${level}`, xy[0], xy[1]);
+
+  // Hero position is global: visible outside function
+  // TODO: Fix the bug where the Hero is INVISIBLE for the User
+  heroPosition = randomGroundTile();
+  heroWalks(0, 0);
 
   // Check if the Stairs is Accessible.
-  counter = 100;
+  let counter = maxIterations;
   while(!isStairsAccessible() && counter > 0){
     counter--;
     enterLevel(level, fieldWidth, fieldHeight);
+    consoleDebug("Inaccessible stairs. Rebuilding...");
   }
+  
   if (!isStairsAccessible()){
-    document.body.innerHTML = "The Game has become too tough :(";
+    writeToDocument("error: the game has become too tough :(");
   }
+  redraw();
 }
 
 // Get a random tile which has Ground as its content. (- uses global fieldWidth, fieldHeight)
 function randomGroundTile(){
+  let x, y, tileContent, typeOfTile;
   for(i = 0; i < fieldWidth * fieldHeight; i++){
+    consoleDebug("Searching for a random Ground tile...");
     x = getRandomInt(0, fieldWidth - 1);
     y = getRandomInt(0, fieldHeight - 1);
-    let tileContent = getTileAt(x, y);
-    let typeOfTile = tileContent[0];
+    tileContent = getTileAt(x, y);
+    typeOfTile = tileContent[0];
     if(typeOfTile == "g"){
       break;
     }
@@ -227,7 +221,7 @@ function checkDirection() {
   if (dx < dy  && touchendY > touchstartY) {heroWalks(0,  1)}; /*DN*/
 }
 
-// Check whether the hero will be able to get to the Stairs (+)
+// Check whether the hero is able to get to the Stairs (+)
 function isStairsAccessible(){
   checkedCells = [];
   checkedCells.push(heroPosition);
@@ -238,18 +232,18 @@ function isStairsAccessible(){
 // Check whether cell can be walked by the hero (+)
 function checkCell(coord, checkedCells){
   checkedCells.push(coord.join(","));
-  console.debug("checking cell " + coord);
-  [x, y] = coord;
-  [left,  right] = [ [x - 1, y], [x + 1, y] ];
-  [upper, lower] = [ [x, y - 1], [x, y + 1] ];
-  for(direction of [left, right, upper, lower]){
+  consoleDebug("checking cell " + coord);
+  let [x, y] = coord;
+  let [left,  right] = [ [x - 1, y], [x + 1, y] ];
+  let [upper, lower] = [ [x, y - 1], [x, y + 1] ];
+  for(let direction of [left, right, upper, lower]){
     if(checkedCells.indexOf(direction.join(",")) > -1) continue;
-    tile = getTileAt(direction[0], direction[1]);
-    console.debug(tile);
+    let tile = getTileAt(direction[0], direction[1]);
+    consoleDebug("tile at x, y " + [x, y] + " is " + tile);
     if(tile == null) {
       continue;
     } 
-    tileType = tile[0];
+    let tileType = tile[0];
     if (tileType == "s"){
       checkedCells.push("success");
       return;
@@ -259,11 +253,64 @@ function checkCell(coord, checkedCells){
   }
 }
 
-// Scroll to element (- uses document)
+// Scroll to element (- DOM specific)
 function scrollToElemId(id){
   document.getElementById(id).scrollIntoView({
       behavior: 'auto',
       block: 'center',
       inline: 'center'
   });
+}
+
+// Write content to the document. (- DOM specific)
+function writeToDocument(content){
+  if(content.substring(0, 7) == "health:"){
+    document.getElementById("herohealth").innerHTML = content;
+    return;
+  }
+
+  if(content.substring(0, 6) == "error:"){
+    document.body.innerHTML = content;
+    return;
+  }
+
+  document.getElementById("gameFieldDiv").innerHTML = content;
+}
+
+// Push the game field into actual drawing (- HTML builder)
+function redraw(){
+  let result = "";
+  for(let y = 0; y < fieldHeight; y++){
+    for(let x = 0; x < fieldWidth; x++){
+      result += `<div class="tile ${gameField[y][x]}" id="x_${x}_y_${y}">` + 
+      `<img src="images/${gameField[y][x]}.png"/></div>`
+    }
+    result += "<br>";
+  }
+  writeToDocument(result);
+}
+
+// Write to log if the global debug setting is on (+)
+function consoleDebug(content){
+  if(debugEnabled) console.debug(content);
+}
+
+// Add events for keyboard and touch control. (- DOM specific)
+function addListeners(){
+  // check keys when they are pressed
+  document.onkeydown = checkKey;
+
+ // Touch user interface orientation
+  document.addEventListener('touchstart', e => {
+      touchstartX = e.changedTouches[0].screenX;
+      touchstartY = e.changedTouches[0].screenY;
+      e.preventDefault();
+  })
+
+  document.addEventListener('touchend', e => {
+      touchendX = e.changedTouches[0].screenX;
+      touchendY = e.changedTouches[0].screenY;
+      checkDirection();
+      e.preventDefault();
+  })
 }
