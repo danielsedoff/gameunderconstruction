@@ -1,36 +1,36 @@
+// Technical globals
 var debugEnabled = true;
 var maxIterations = 100;
 
+// Game globals, non-DOM
 var fieldWidth = 9;
 var fieldHeight = 15;
 var level = 1;
 var maxLevel = 10;
 var heroHealth = 100;
 var heroPosition = [0, 0];
-
-// Create a two-dimensional array: game field.
-var gameField = [];
-for(let y = 0; y < fieldHeight; y++) {
-  gameField[y] = [];
-  for (let x = 0; x < fieldWidth; x++) {
-    gameField[y][x] = "";
-  }
-}
-
-redraw();
-enterLevel(level, fieldWidth, fieldHeight);
+var gameField = makeGameField();
 
 // Touch display specific, DOM specific
 var touchstartX = 0;
 var touchstartY = 0;
 var touchendX = 0;
 var touchendY = 0;
+
+redraw();
 addListeners();
+enterLevel(level, fieldWidth, fieldHeight);
 
-
-// Basic Health stat. (- writing html to document)
-function writeHealthToDocument(){
-  writeToDocument(`health: ${heroHealth}%`);
+// Create an empty two-dimensional array (+)
+function makeGameField(){
+  let gameField = [];
+  for(let y = 0; y < fieldHeight; y++) {
+    gameField[y] = [];
+    for (let x = 0; x < fieldWidth; x++) {
+      gameField[y][x] = "";
+    }
+  }
+  return gameField;
 }
 
 // Draw obstacles (+)
@@ -46,7 +46,7 @@ function drawRandomObstacle(length){
   }
 }
 
-// Basic Hero Walking method (- global heroPosition)
+// Basic Hero Walking method (+)
 function heroWalks(dx, dy) {
   writeHealthToDocument();
   let oldx = heroPosition[0];
@@ -137,7 +137,7 @@ function checkKey(e) {
     e.preventDefault();
   }
   
-// Enter a new level (- read html, use global heroPosition)
+// Enter a new level (+)
 function enterLevel(level, fieldWidth, fieldHeight) {
   getEmptyFIeld(level, fieldWidth, fieldHeight);
 
@@ -184,7 +184,7 @@ function enterLevel(level, fieldWidth, fieldHeight) {
   redraw();
 }
 
-// Get a random tile which has Ground as its content. (- uses global fieldWidth, fieldHeight)
+// Get a random tile which has Ground as its content. (+)
 function randomGroundTile(){
   let x, y, tileContent, typeOfTile;
   for(i = 0; i < fieldWidth * fieldHeight; i++){
@@ -253,6 +253,11 @@ function checkCell(coord, checkedCells){
   }
 }
 
+// Write to log if the global debug setting is on (+)
+function consoleDebug(content){
+  if(debugEnabled) console.debug(content);
+}
+
 // Scroll to element (- DOM specific)
 function scrollToElemId(id){
   document.getElementById(id).scrollIntoView({
@@ -290,11 +295,6 @@ function redraw(){
   writeToDocument(result);
 }
 
-// Write to log if the global debug setting is on (+)
-function consoleDebug(content){
-  if(debugEnabled) console.debug(content);
-}
-
 // Add events for keyboard and touch control. (- DOM specific)
 function addListeners(){
   // check keys when they are pressed
@@ -313,4 +313,9 @@ function addListeners(){
       checkDirection();
       e.preventDefault();
   })
+}
+
+// Basic Health stat. (- writing html to document)
+function writeHealthToDocument(){
+  writeToDocument(`health: ${heroHealth}%`);
 }
