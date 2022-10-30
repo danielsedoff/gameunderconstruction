@@ -17,7 +17,7 @@ var touchstartY = 0;
 var touchendX = 0;
 var touchendY = 0;
 
-redraw();
+redraw(gameField);
 addListeners();
 enterLevel(level, fieldWidth, fieldHeight);
 
@@ -76,13 +76,13 @@ function heroWalks(dx, dy) {
     // Ground. You can step on the ground.
     changeTileAt(newTileContent.join("_"), oldx, oldy);
     changeTileAt("h_1", x, y);
-    redraw();
+    redraw(gameField);
 
   } else if (typeOfTile == "m") {
     consoleDebug("Stepped on a monster");
     [gtx, gty] = randomGroundTile();
     changeTileAt(getTileAt(gtx, gty).join("_"), oldx, oldy);
-    redraw();
+    redraw(gameField);
     heroPosition = [-2, -2];
     heroHealth -= 100;
     writeHealthToDocument();
@@ -143,7 +143,7 @@ function enterLevel(level, fieldWidth, fieldHeight) {
 
   // Win scenario
   if(level == "win"){
-    redraw();
+    redraw(gameField);
     return;
   }
 
@@ -181,7 +181,7 @@ function enterLevel(level, fieldWidth, fieldHeight) {
   if (!isStairsAccessible()){
     writeToDocument("error: the game has become too tough :(");
   }
-  redraw();
+  redraw(gameField);
 }
 
 // Get a random tile which has Ground as its content. (+)
@@ -283,12 +283,12 @@ function writeToDocument(content){
 }
 
 // Push the game field into actual drawing (- HTML builder)
-function redraw(){
+function redraw(field){
   let result = "";
-  for(let y = 0; y < fieldHeight; y++){
-    for(let x = 0; x < fieldWidth; x++){
-      result += `<div class="tile ${gameField[y][x]}" id="x_${x}_y_${y}">` + 
-      `<img src="images/${gameField[y][x]}.png"/></div>`
+  for(let y = 0; y < field.length; y++){
+    for(let x = 0; x < field[0].length; x++){
+      result += `<div class="tile ${field[y][x]}" id="x_${x}_y_${y}">` + 
+      `<img src="images/${field[y][x]}.png"/></div>`
     }
     result += "<br>";
   }
@@ -318,4 +318,27 @@ function addListeners(){
 // Basic Health stat. (- writing html to document)
 function writeHealthToDocument(){
   writeToDocument(`health: ${heroHealth}%`);
+}
+
+// Get a (Width x Height) rectangle around Center Tile at (x, y)
+function cropField(x, y, width, height){
+  let xmargin = (width - 1) / 2, ymargin = (height - 1) / 2;
+  let minx = x - xmargin, maxx = x + xmargin;
+  let miny = y - ymargin, maxy = y + ymargin;
+
+  let cropped = [];
+  for (i = miny; i <= maxy; i++) {
+    let line = [];
+    for (j = minx; j <= maxx; j++) {
+      line.push(gameField[i][j]);
+    }
+    cropped.push(line);
+  }
+  return cropped;
+} 
+
+// Redraw a (Width x Height) rectangle around the Hero
+function redrawCropAroundHero(width, height){
+  let [hp0, hp1] = heroPosition;
+  redraw (cropField(hp0, hp1, width, height));
 }
