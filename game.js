@@ -12,6 +12,7 @@ var maxLevel = 10;
 var heroHealth = 100;
 var heroPosition = [0, 0];
 var gameField = makeGameField();
+var heroTile = "h_r";
 
 // Touch display specific, DOM specific
 var touchstartX = 0;
@@ -77,7 +78,10 @@ function heroWalks(dx, dy) {
   } else if (typeOfTile == "g") {
     // Ground. You can step on the ground.
     changeTileAt(newTileContent.join("_"), oldx, oldy);
-    changeTileAt("h_1", x, y);
+    if(dx != 0) {
+      heroTile = dx < 0 ? "h_l" : "h_r";
+    }
+    changeTileAt(heroTile, x, y);
     redrawCropAroundHero(croppedWidth, croppedHeight);
 
   } else if (typeOfTile == "m") {
@@ -128,10 +132,16 @@ function getTileAt(x, y){
 // Enable Arrow Keys navigation (- uses window)
 function checkKey(e) {
     let action = [];
-    action[38] = () => {heroWalks(0, -1)}; /*UP*/
-    action[40] = () => {heroWalks(0, 1)};  /*DN*/
-    action[37] = () => {heroWalks(-1, 0)}; /*LT*/
-    action[39] = () => {heroWalks(1, 0)};  /*RT*/
+    action[38] = () => {heroWalks(0, -1)}; /*Up key*/
+    action[40] = () => {heroWalks(0, 1)};  /*Down key*/
+    action[37] = () => {heroWalks(-1, 0)}; /*Left key*/
+    action[39] = () => {heroWalks(1, 0)};  /*Right key*/
+
+    action[87] = action[38]; /* W */
+    action[83] = action[40]; /* A */
+    action[65] = action[37]; /* S */
+    action[68] = action[39]; /* D */
+
     e = e || window.event;
     if (action[e.keyCode]) {
       action[e.keyCode]();
@@ -262,11 +272,15 @@ function consoleDebug(content){
 
 // Scroll to element (- DOM specific)
 function scrollToElemId(id){
+  try{
     document.getElementById(id).scrollIntoView({
         behavior: 'auto',
         block: 'center',
         inline: 'center'
     });
+  } catch(e){
+    consoleDebug("can't scroll!")
+  }
 }
 
 // Write content to the document. (- DOM specific)
