@@ -60,7 +60,7 @@ function heroWalks(dx, dy) {
   let newTileContent = getTileAt(x, y);
   if(newTileContent == null) return;
   let typeOfTile = newTileContent[0];
-  scrollToElemId(`x_${x}_y_${y}`);
+  scrollToElemId(`x_${heroPosition[1]}_y_${heroPosition[1]}`);
 
   if (typeOfTile == "s") {
     consoleDebug("Walking down the stairs.");
@@ -101,13 +101,17 @@ function heroWalks(dx, dy) {
 }
 
 // Draw an empty field with ground or 'WIN' tiles (+)
-function getEmptyFIeld(level, cols, rows) {
-  let tileContent = "g_" + level;
-  if(level == "win") {
-    tileContent = "win";
-  }
+function getEmptyFIeld(currentLevel, cols, rows) {
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
+      let tileContent = "g_" + currentLevel;
+      // Need some mud to avoid dull scenery
+      if(getRandomInt(0, 12) == 6) {
+        tileContent = "g_m"
+      }
+      if(currentLevel == "win") {
+        tileContent = "win";
+      }
       gameField[y][x] = tileContent;
       consoleDebug("Drawing an empty table: x, y" + [x, y]);
     }
