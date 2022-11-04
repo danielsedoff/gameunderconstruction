@@ -3,8 +3,10 @@ var debugEnabled = true;
 var maxIterations = 100;
 
 // Game globals, non-DOM
-var fieldWidth = 9;
-var fieldHeight = 15;
+var fieldWidth = 32;
+var fieldHeight = 32;
+var croppedWidth = 9;
+var croppedHeight = 9;
 var level = 1;
 var maxLevel = 10;
 var heroHealth = 100;
@@ -76,13 +78,13 @@ function heroWalks(dx, dy) {
     // Ground. You can step on the ground.
     changeTileAt(newTileContent.join("_"), oldx, oldy);
     changeTileAt("h_1", x, y);
-    redraw(gameField);
+    redrawCropAroundHero(croppedWidth, croppedHeight);
 
   } else if (typeOfTile == "m") {
     consoleDebug("Stepped on a monster");
     [gtx, gty] = randomGroundTile();
     changeTileAt(getTileAt(gtx, gty).join("_"), oldx, oldy);
-    redraw(gameField);
+    redrawCropAroundHero(croppedWidth, croppedHeight);
     heroPosition = [-2, -2];
     heroHealth -= 100;
     writeStatsToDocument();
@@ -143,7 +145,7 @@ function enterLevel(level, fieldWidth, fieldHeight) {
 
   // Win scenario
   if(level == "win"){
-    redraw(gameField);
+    redrawCropAroundHero(croppedWidth, croppedHeight);
     return;
   }
 
@@ -181,7 +183,7 @@ function enterLevel(level, fieldWidth, fieldHeight) {
   if (!isStairsAccessible()){
     writeToDocument("error: the game has become too tough :(");
   }
-  redraw(gameField);
+  redrawCropAroundHero(croppedWidth, croppedHeight);
 }
 
 // Get a random tile which has Ground as its content. (+)
@@ -292,7 +294,7 @@ function redraw(field){
     }
     result += "<br>";
   }
-  writeToDocument(result);
+  return result;
 }
 
 // Add events for keyboard and touch control. (- DOM specific)
@@ -320,17 +322,24 @@ function writeStatsToDocument(){
   writeToDocument(`stats: health: ${heroHealth}%; level: ${level} of ${maxLevel}`);
 }
 
-// Get a (Width x Height) rectangle around Center Tile at (x, y)
-function cropField(x, y, width, height){
-  let xmargin = (width - 1) / 2, ymargin = (height - 1) / 2;
-  let minx = x - xmargin, maxx = x + xmargin;
-  let miny = y - ymargin, maxy = y + ymargin;
+// Get a (Width x Height) rectangle with the hero in it
+function cropField(heroX, heroY, cropWidth, cropHeight){
+  let minx = heroX - Math.floor(cropWidth / 2);
+  let miny = heroY - Math.floor(cropHeight / 2);
+  let maxx = minx + cropWidth;
+  let maxy = miny + cropHeight;
+
+
 
   let cropped = [];
-  for (i = miny; i <= maxy; i++) {
+  for (let y = miny; y <= maxy; y++) {
     let line = [];
-    for (j = minx; j <= maxx; j++) {
-      line.push(gameField[i][j]);
+    for (let x = minx; x <= maxx; x++) {
+      if (x < 0 || x >= fieldWidth || y < 0 || y >= fieldHeight) {
+        line.push("o_a");
+      } else {
+        line.push(gameField[y][x]);
+      }
     }
     cropped.push(line);
   }
@@ -340,7 +349,7 @@ function cropField(x, y, width, height){
 // Redraw a (Width x Height) rectangle around the Hero
 function redrawCropAroundHero(width, height){
   let [hp0, hp1] = heroPosition;
-  redraw (cropField(hp0, hp1, width, height));
+  writeToDocument(redraw (cropField(hp0, hp1, width, height)));
 }
 
 // What is the max number of monsters to show?
