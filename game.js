@@ -148,14 +148,14 @@ function enterLevel(level, fieldWidth, fieldHeight) {
   }
 
   // Draw obstacles
-  for (let i = 0; i < level; i++){
+  for (let i = 0; i < maxObstacles(fieldHeight, fieldWidth); i++){
     drawRandomObstacle(level * 2);
     consoleDebug("Another random obstacle set...");
   }
 
   // Put monsters at random places.
   // TODO: The hero must be able to kill monsters.
-  for(let i = 0; i < level; i++){
+  for(let i = 0; i < maxMonsters(level, fieldWidth, fieldHeight); i++){
     let xy = randomGroundTile();
     changeTileAt(`m_${level}`, xy[0], xy[1]);
     consoleDebug("Putting a monster at x, y: " + xy);
@@ -341,4 +341,14 @@ function cropField(x, y, width, height){
 function redrawCropAroundHero(width, height){
   let [hp0, hp1] = heroPosition;
   redraw (cropField(hp0, hp1, width, height));
+}
+
+// What is the max number of monsters to show?
+function maxMonsters(level, width, height){
+  let totalMaxMonsters = (width * height) / 16;
+  return Math.floor(totalMaxMonsters / (maxLevel - level));
+}
+
+function maxObstacles(a, b){
+  return Math.floor(Math.sqrt(Math.min(a, b)));
 }
