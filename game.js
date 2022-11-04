@@ -48,7 +48,7 @@ function drawRandomObstacle(length){
 
 // Basic Hero Walking method (+)
 function heroWalks(dx, dy) {
-  writeHealthToDocument();
+  writeStatsToDocument();
   let oldx = heroPosition[0];
   let oldy = heroPosition[1];
   let x = oldx + dx;
@@ -85,7 +85,7 @@ function heroWalks(dx, dy) {
     redraw(gameField);
     heroPosition = [-2, -2];
     heroHealth -= 100;
-    writeHealthToDocument();
+    writeStatsToDocument();
     return;
 
   } else {
@@ -260,16 +260,16 @@ function consoleDebug(content){
 
 // Scroll to element (- DOM specific)
 function scrollToElemId(id){
-  document.getElementById(id).scrollIntoView({
-      behavior: 'auto',
-      block: 'center',
-      inline: 'center'
-  });
+    document.getElementById(id).scrollIntoView({
+        behavior: 'auto',
+        block: 'center',
+        inline: 'center'
+    });
 }
 
 // Write content to the document. (- DOM specific)
 function writeToDocument(content){
-  if(content.substring(0, 7) == "health:"){
+  if(content.substring(0, 6) == "stats:"){
     document.getElementById("herohealth").innerHTML = content;
     return;
   }
@@ -316,8 +316,8 @@ function addListeners(){
 }
 
 // Basic Health stat. (- writing html to document)
-function writeHealthToDocument(){
-  writeToDocument(`health: ${heroHealth}%`);
+function writeStatsToDocument(){
+  writeToDocument(`stats: health: ${heroHealth}%; level: ${level} of ${maxLevel}`);
 }
 
 // Get a (Width x Height) rectangle around Center Tile at (x, y)
