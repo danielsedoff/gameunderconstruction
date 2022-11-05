@@ -14,12 +14,6 @@ var heroPosition = [0, 0];
 var gameField = makeGameField();
 var heroTile = "h_r";
 
-// Touch display specific, DOM specific
-var touchstartX = 0;
-var touchstartY = 0;
-var touchendX = 0;
-var touchendY = 0;
-
 redraw(gameField);
 addListeners();
 enterLevel(level, fieldWidth, fieldHeight);
@@ -133,26 +127,6 @@ function getTileAt(x, y){
   }
 }
 
-// Enable Arrow Keys navigation (- uses window)
-function checkKey(e) {
-    let action = [];
-    action[38] = () => {heroWalks(0, -1)}; /*Up key*/
-    action[40] = () => {heroWalks(0, 1)};  /*Down key*/
-    action[37] = () => {heroWalks(-1, 0)}; /*Left key*/
-    action[39] = () => {heroWalks(1, 0)};  /*Right key*/
-
-    action[87] = action[38]; /* W */
-    action[83] = action[40]; /* A */
-    action[65] = action[37]; /* S */
-    action[68] = action[39]; /* D */
-
-    e = e || window.event;
-    if (action[e.keyCode]) {
-      action[e.keyCode]();
-    }
-    e.preventDefault();
-  }
-  
 // Enter a new level (+)
 function enterLevel(level, fieldWidth, fieldHeight) {
   getEmptyFIeld(level, fieldWidth, fieldHeight);
@@ -177,7 +151,7 @@ function enterLevel(level, fieldWidth, fieldHeight) {
     consoleDebug("Putting a monster at x, y: " + xy);
   }
 
-  // Draw stairs.
+  // Add stairs to the game field.
   let xy = randomGroundTile();
   changeTileAt(`s_${level}`, xy[0], xy[1]);
 
@@ -223,20 +197,6 @@ function getRandomInt(min, max){
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// Check touch direction (+)
-function checkDirection() {
-  let dx = Math.abs(touchendX - touchstartX);
-  let dy = Math.abs(touchendY - touchstartY);
-
-  // Distance too low
-  if (Math.max(dx, dy) < 64) return;
-
-  if (dx >= dy && touchendX < touchstartX) {heroWalks(-1, 0)}; /*LT*/
-  if (dx < dy  && touchendY < touchstartY) {heroWalks(0, -1)}; /*UP*/
-  if (dx >= dy && touchendX > touchstartX) {heroWalks(1,  0)}; /*RT*/
-  if (dx < dy  && touchendY > touchstartY) {heroWalks(0,  1)}; /*DN*/
-}
-
 // Check whether the hero is able to get to the Stairs (+)
 function isStairsAccessible(){
   checkedCells = [];
@@ -274,34 +234,6 @@ function consoleDebug(content){
   if(debugEnabled) console.debug(content);
 }
 
-// Scroll to element (- DOM specific)
-function scrollToElemId(id){
-  try{
-    document.getElementById(id).scrollIntoView({
-        behavior: 'auto',
-        block: 'center',
-        inline: 'center'
-    });
-  } catch(e){
-    consoleDebug("can't scroll!")
-  }
-}
-
-// Write content to the document. (- DOM specific)
-function writeToDocument(content){
-  if(content.substring(0, 6) == "stats:"){
-    document.getElementById("herohealth").innerHTML = content;
-    return;
-  }
-
-  if(content.substring(0, 6) == "error:"){
-    document.body.innerHTML = content;
-    return;
-  }
-
-  document.getElementById("gameFieldDiv").innerHTML = content;
-}
-
 // Push the game field into actual drawing (- HTML builder)
 function redraw(field){
   let result = "";
@@ -315,26 +247,6 @@ function redraw(field){
   return result;
 }
 
-// Add events for keyboard and touch control. (- DOM specific)
-function addListeners(){
-  // check keys when they are pressed
-  document.onkeydown = checkKey;
-
- // Touch user interface orientation
-  document.addEventListener('touchstart', e => {
-      touchstartX = e.changedTouches[0].screenX;
-      touchstartY = e.changedTouches[0].screenY;
-      e.preventDefault();
-  })
-
-  document.addEventListener('touchend', e => {
-      touchendX = e.changedTouches[0].screenX;
-      touchendY = e.changedTouches[0].screenY;
-      checkDirection();
-      e.preventDefault();
-  })
-}
-
 // Basic Health stat. (- writing html to document)
 function writeStatsToDocument(){
   writeToDocument(`stats: health: ${heroHealth}%; level: ${level} of ${maxLevel}`);
@@ -346,8 +258,6 @@ function cropField(heroX, heroY, cropWidth, cropHeight){
   let miny = heroY - Math.floor(cropHeight / 2);
   let maxx = minx + cropWidth;
   let maxy = miny + cropHeight;
-
-
 
   let cropped = [];
   for (let y = miny; y <= maxy; y++) {
