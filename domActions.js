@@ -4,6 +4,17 @@ var touchstartY = 0;
 var touchendX = 0;
 var touchendY = 0;
 
+// Get window size as [x, y]
+function getWindowSize(axis){
+  let win = window,
+  doc = document,
+  docElem = doc.documentElement,
+  body = doc.getElementsByTagName('body')[0],
+  x = win.innerWidth || docElem.clientWidth || body.clientWidth,
+  y = win.innerHeight || docElem.clientHeight || body.clientHeight;
+  return (axis == "x") ? x : y;
+}
+
 // Add events for keyboard and touch control. (- DOM specific)
 function addListeners() {
   // check keys when they are pressed

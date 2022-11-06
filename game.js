@@ -5,14 +5,15 @@ var maxIterations = 100;
 // Game globals, non-DOM
 var fieldWidth = 32;
 var fieldHeight = 32;
-var croppedWidth = 9;
-var croppedHeight = 9;
+// Tile size is 128 pixels.
+var croppedWidth = getWindowSize("x") / 64 - 1;
+var croppedHeight = getWindowSize("y") / 64 - 1;
 var level = 1;
 var maxLevel = 10;
 var heroHealth = 100;
 var heroPosition = [0, 0];
 var gameField = makeGameField();
-var heroTile = "h_r";
+var heroTile = "hero_right";
 
 redraw(gameField);
 addListeners();
@@ -39,7 +40,7 @@ function drawRandomObstacle(length){
   while(getTileAt(x + dx, y + dy) != null){
     x += dx; y += dy;
     consoleDebug(`Drawing random obstacle, x: ${x} y: ${y}`);
-    changeTileAt(`o_${level}`, x, y); 
+    changeTileAt(`obstacle_${level}`, x, y); 
   }
 }
 
@@ -54,9 +55,9 @@ function heroWalks(dx, dy) {
   let newTileContent = getTileAt(x, y);
   if(newTileContent == null) return;
   let typeOfTile = newTileContent[0];
-  scrollToElemId(`x_${heroPosition[1]}_y_${heroPosition[1]}`);
+  // scrollToElemId(`x_${heroPosition[1]}_y_${heroPosition[1]}`);
 
-  if (typeOfTile == "s") {
+  if (typeOfTile == "stairs") {
     consoleDebug("Walking down the stairs.");
     level++;
     if(level >= maxLevel){
@@ -65,20 +66,20 @@ function heroWalks(dx, dy) {
     enterLevel(level, fieldWidth, fieldHeight);
     return;
 
-  } else if (typeOfTile == "o") {
+  } else if (typeOfTile == "obstacle") {
     consoleDebug("Can't step on obstacles.");
     return;
     
-  } else if (typeOfTile == "g") {
+  } else if (typeOfTile == "ground") {
     // Ground. You can step on the ground.
     changeTileAt(newTileContent.join("_"), oldx, oldy);
     if(dx != 0) {
-      heroTile = dx < 0 ? "h_l" : "h_r";
+      heroTile = dx < 0 ? "hero_left" : "hero_right";
     }
     changeTileAt(heroTile, x, y);
     redrawCropAroundHero(croppedWidth, croppedHeight);
 
-  } else if (typeOfTile == "m") {
+  } else if (typeOfTile == "monster") {
     consoleDebug("Stepped on a monster");
     [gtx, gty] = randomGroundTile();
     changeTileAt(getTileAt(gtx, gty).join("_"), oldx, oldy);
@@ -98,10 +99,10 @@ function heroWalks(dx, dy) {
 function getEmptyFIeld(currentLevel, cols, rows) {
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
-      let tileContent = "g_" + currentLevel;
+      let tileContent = "ground_" + currentLevel;
       // Need some mud to avoid dull scenery
       if(getRandomInt(0, 12) == 6) {
-        tileContent = "g_m"
+        tileContent = "ground_mud"
       }
       if(currentLevel == "win") {
         tileContent = "win";
@@ -147,13 +148,13 @@ function enterLevel(level, fieldWidth, fieldHeight) {
   // TODO: The hero must be able to kill monsters.
   for(let i = 0; i < maxMonsters(level, fieldWidth, fieldHeight); i++){
     let xy = randomGroundTile();
-    changeTileAt(`m_${level}`, xy[0], xy[1]);
+    changeTileAt(`monster_${level}`, xy[0], xy[1]);
     consoleDebug("Putting a monster at x, y: " + xy);
   }
 
   // Add stairs to the game field.
   let xy = randomGroundTile();
-  changeTileAt(`s_${level}`, xy[0], xy[1]);
+  changeTileAt(`stairs_${level}`, xy[0], xy[1]);
 
   // Hero position is global: visible outside function
   // TODO: Fix the bug where the Hero is INVISIBLE for the User
@@ -183,7 +184,7 @@ function randomGroundTile(){
     y = getRandomInt(0, fieldHeight - 1);
     tileContent = getTileAt(x, y);
     typeOfTile = tileContent[0];
-    if(typeOfTile == "g"){
+    if(typeOfTile == "ground"){
       break;
     }
   }
@@ -207,6 +208,7 @@ function isStairsAccessible(){
 
 // Check whether cell can be walked by the hero (+)
 function checkCell(coord, checkedCells){
+  if (checkedCells.indexOf("success") > -1) return;
   checkedCells.push(coord.join(","));
   consoleDebug("checking cell " + coord);
   let [x, y] = coord;
@@ -220,10 +222,10 @@ function checkCell(coord, checkedCells){
       continue;
     } 
     let tileType = tile[0];
-    if (tileType == "s"){
+    if (tileType == "stairs"){
       checkedCells.push("success");
       return;
-    } else if (tileType == "g"){
+    } else if (tileType == "ground"){
       checkCell(direction, checkedCells);
     }
   }
@@ -264,7 +266,7 @@ function cropField(heroX, heroY, cropWidth, cropHeight){
     let line = [];
     for (let x = minx; x <= maxx; x++) {
       if (x < 0 || x >= fieldWidth || y < 0 || y >= fieldHeight) {
-        line.push("o_a");
+        line.push("obstacle_sea");
       } else {
         line.push(gameField[y][x]);
       }
