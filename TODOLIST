@@ -1,0 +1,5 @@
+TODO: Add transparent WASD control
+TODO: Add WASD show/hide switch, transparent "gamepad" icon
+TODO: Add touch control: touch instead of swipe
+    - eight sectors around central tile
+    - on touch go LL, RR, LU, RD ..
