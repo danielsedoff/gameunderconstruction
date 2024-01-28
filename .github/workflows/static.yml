@@ -26,7 +26,7 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.step_name.outputs.url_output }}
+      url: https://github.io/danielsedoff/gameunderconstruction
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
